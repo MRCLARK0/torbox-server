@@ -1,4 +1,5 @@
 import express from "express";
+import multer from 'multer';
 import cors from 'cors';
 import dotenv from "dotenv";
 import TorboxAPI from './torbox';
@@ -7,6 +8,8 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 7000;
+
+const upload = multer();
 
 const corsOptions = {
     origin: 'http://localhost:3000',
@@ -46,6 +49,23 @@ app.get("/torbox/user/me", async (_req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Failed to fetch Torbox user data" });
+    }
+});
+
+app.post("/torbox/webdownload/create", upload.none(), async (req, res) => {
+    console.log("Request Body:", req.body);
+    const { link }  = req.body;
+
+    if (!link) {
+        return res.status(400).json({ error: "Link is required" });
+    }
+
+    try {
+        const webDownloadData = await torboxSDK.createWebDownload(link);
+        return res.status(201).json(webDownloadData);
+    } catch (error) {
+        console.error('Error creating web download:', error);
+        return res.status(500).json({ error: "Failed to create web download" });
     }
 });
 
